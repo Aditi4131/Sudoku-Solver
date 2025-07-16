@@ -1,11 +1,164 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" inherit-compiler-output="true">
-    <exclude-output />
-    <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-    </content>
-    <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
-  </component>
-</module>
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+class SudokuSolver {
+    public static void main(String[] args) {
+        // Create main application window
+        JFrame frame = new JFrame("Simple Sudoku Solver");
+        frame.setSize(520, 640);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
+
+        // Create a 9x9 grid panel
+        JPanel gridPanel = new JPanel(new GridLayout(9, 9));
+        gridPanel.setBackground(Color.BLACK);
+        JTextField[][] grid = new JTextField[9][9];
+        Font font = new Font("Consolas", Font.BOLD, 18);
+
+        // Initialize all 81 text fields (cells)
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                JTextField cell = new JTextField();
+                cell.setFont(font);
+                cell.setHorizontalAlignment(JTextField.CENTER);
+                cell.setBackground(Color.BLACK);
+                cell.setForeground(Color.WHITE);
+                cell.setCaretColor(Color.WHITE);
+
+                // Simple white border around each cell
+                cell.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1));
+
+                grid[i][j] = cell;
+                gridPanel.add(cell);
+            }
+        }
+
+        // Pre-fill sample Sudoku values
+        // Pre-fill sample Sudoku values (balanced across 3x3 boxes)
+        grid[0][0].setText("5");  // Top-left box
+        grid[1][1].setText("3");
+
+        grid[0][4].setText("7");  // Top-middle box
+        grid[1][3].setText("1");
+
+        grid[0][8].setText("6");  // Top-right box
+        grid[2][7].setText("2");
+
+        grid[3][1].setText("9");  // Middle-left box
+        grid[4][2].setText("8");
+
+        grid[3][4].setText("6");  // Center box
+        grid[5][4].setText("3");
+
+        grid[3][8].setText("5");  // Middle-right box
+        grid[4][7].setText("4");
+
+        grid[6][0].setText("7");  // Bottom-left box
+        grid[7][2].setText("1");
+
+        grid[6][4].setText("9");  // Bottom-middle box
+        grid[8][3].setText("2");
+
+        grid[6][8].setText("4");  // Bottom-right box
+        grid[7][7].setText("8");
+
+
+        // Create Solve and Clear buttons
+        JButton solveBtn = new JButton("Solve");
+        JButton clearBtn = new JButton("Clear");
+
+        // Style buttons
+        JButton[] buttons = {solveBtn, clearBtn};
+        for (JButton btn : buttons) {
+            btn.setBackground(Color.DARK_GRAY);
+            btn.setForeground(Color.WHITE);
+            btn.setFont(new Font("Arial", Font.BOLD, 16));
+        }
+
+        // Panel for buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(Color.BLACK);
+        buttonPanel.add(solveBtn);
+        buttonPanel.add(clearBtn);
+
+        // Add panels to frame
+        frame.add(gridPanel, BorderLayout.CENTER);
+        frame.add(buttonPanel, BorderLayout.SOUTH);
+        frame.getContentPane().setBackground(Color.BLACK);
+
+        // Action for Solve button
+        solveBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int[][] board = new int[9][9];
+
+                // Read values from grid
+                for (int i = 0; i < 9; i++) {
+                    for (int j = 0; j < 9; j++) {
+                        String text = grid[i][j].getText().trim();
+                        if (text.isEmpty())
+                            board[i][j] = 0;
+                        else
+                            board[i][j] = Integer.parseInt(text);
+                    }
+                }
+
+                // Solve and update UI
+                if (solve(board)) {
+                    for (int i = 0; i < 9; i++)
+                        for (int j = 0; j < 9; j++)
+                            grid[i][j].setText(String.valueOf(board[i][j]));
+                }
+            }
+
+            // Backtracking Sudoku solver
+            boolean solve(int[][] board) {
+                for (int row = 0; row < 9; row++) {
+                    for (int col = 0; col < 9; col++) {
+                        if (board[row][col] == 0) {
+                            for (int num = 1; num <= 9; num++) {
+                                if (isValid(board, row, col, num)) {
+                                    board[row][col] = num;
+                                    if (solve(board)) return true;
+                                    board[row][col] = 0;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Check if num can be placed at (row, col)
+            boolean isValid(int[][] board, int row, int col, int num) {
+                for (int i = 0; i < 9; i++) {
+                    if (board[row][i] == num || board[i][col] == num)
+                        return false;
+                }
+
+                int startRow = (row / 3) * 3;
+                int startCol = (col / 3) * 3;
+                for (int i = 0; i < 3; i++)
+                    for (int j = 0; j < 3; j++)
+                        if (board[startRow + i][startCol + j] == num)
+                            return false;
+
+                return true;
+            }
+        });
+
+        // Action for Clear button
+        clearBtn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                for (int i = 0; i < 9; i++)
+                    for (int j = 0; j < 9; j++)
+                        grid[i][j].setText("");
+            }
+        });
+
+        // Show the application window
+        frame.setVisible(true);
+    }
+}
